@@ -1,5 +1,6 @@
 package net.johnbrooks.mh;
 
+import com.bekvon.bukkit.residence.Residence;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.johnbrooks.mh.commands.CommandMobCapture;
 import net.johnbrooks.mh.events.EventManager;
@@ -18,12 +19,14 @@ public class Main extends JavaPlugin {
     public static Economy economy = null;
 
     public static GriefPrevention griefPrevention;
+    public static Residence residence;
 
     @Override
     public void onEnable() {
         plugin = this;
         saveDefaultConfig();
         getCommand("MobCapture").setExecutor(new CommandMobCapture());
+        getCommand("capturar").setExecutor(new CommandMobCapture());
         logger = getLogger();
         permissionManager = new PermissionManager();
         eventManager = new EventManager();

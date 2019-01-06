@@ -1,10 +1,10 @@
 name: MobCapture
-version: 1.2.6
-author: WiseHollow
+version: 1.2.6.1
+authors: [WiseHollow,mjl1010]
 main: net.johnbrooks.mh.Main
 api-version: 1.13
 
-softdepend: [ Vault, GriefPrevention ]
+softdepend: [ Vault, GriefPrevention, Residence ]
 
 permissions:
   MobCapture.Admin:

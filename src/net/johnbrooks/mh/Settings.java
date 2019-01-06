@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Settings {
-    public enum CostMode { NONE, VAULT, ITEM }
+    public enum CostMode { NONE, VAULT, ITEM, ALL }
 
     public static CostMode costMode = CostMode.ITEM;
 
@@ -26,6 +26,9 @@ public class Settings {
     private static List<String> disabledWorlds = new ArrayList<>();
 
     public static boolean griefPreventionHook = false;
+    public static boolean residenceHook = false;
+    public static boolean residenceAllowed = false;
+    public static List<String> residenceFlags = new ArrayList<>();
     public static boolean meleeCapture = true;
 
     public static void load() {
@@ -49,7 +52,7 @@ public class Settings {
         }
 
         // 3) If vault is set, hook into vault.
-        if (costMode == CostMode.VAULT) {
+        if (costMode == CostMode.VAULT || costMode == CostMode.ALL) {
             Main.logger.info("Vault hook " + (setupEconomy() ? "was successful!" : "has failed!"));
             if (Main.economy == null)
             {
@@ -66,6 +69,9 @@ public class Settings {
         disabledWorlds = config.getStringList("Disabled Worlds");
         coloredEggs = config.getBoolean("Colored Eggs");
         griefPreventionHook = config.getBoolean("GriefPrevention Hook");
+        residenceHook = config.getBoolean("Residence Hook");
+        residenceFlags = config.getStringList("Residence Allow Default");
+        residenceAllowed = config.getBoolean("Residence Allow Flags");
         meleeCapture = config.getBoolean("MeleeCapture");
 
         if (griefPreventionHook) {

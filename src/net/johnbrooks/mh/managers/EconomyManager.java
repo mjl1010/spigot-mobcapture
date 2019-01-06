@@ -17,20 +17,33 @@ public class EconomyManager {
                 return chargeItem(player);
             case VAULT:
                 return chargeVault(player);
+            case ALL:
+                return (canChargeVault(player) && canChargeItem(player)) && (chargeVault(player) && chargeItem(player));
             default:
                 return false;
         }
     }
 
+    private static boolean canChargeVault(Player player) {
+        return Main.economy.getBalance(player) >= Settings.costVault;
+    }
+
     private static boolean chargeVault(Player player) {
-        if (Main.economy.getBalance(player) >= Settings.costVault) {
+        if (canChargeVault(player)) {
             if (Settings.costVault > 0) {
-                player.sendMessage(Language.PREFIX + "[Wallet Charged: $" + Settings.costVault + "]");
+                player.sendMessage(Language.getKey("chargeVault").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
                 Main.economy.withdrawPlayer(player, Settings.costVault);
             }
             return true;
         }
         return false;
+    }
+
+    private static boolean canChargeItem(Player player) {
+        Optional<ItemStack> itemStackOptional = Arrays.stream(player.getInventory().getContents())
+                .filter(itemStack -> itemStack != null && itemStack.getType().equals(Settings.costMaterial) && itemStack.getAmount() >= Settings.costAmount)
+                .findAny();
+        return itemStackOptional.isPresent();
     }
 
     private static boolean chargeItem(Player player) {
@@ -44,11 +57,10 @@ public class EconomyManager {
 
             String capitalizedMaterial = Settings.costMaterial.name().substring(0, 1) + Settings.costMaterial.name().substring(1).toLowerCase().replace("_", " ");
             if (Settings.costAmount > 0) {
-                player.sendMessage(Language.PREFIX + "[" + capitalizedMaterial + " Charged: " + Settings.costAmount + "]");
+                player.sendMessage(Language.getKey("chargeItem").replaceAll("%item%", capitalizedMaterial).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
             }
             return true;
         }
-
         return false;
     }
 }

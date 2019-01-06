@@ -140,30 +140,54 @@ public class EventManager implements Listener {
 
     private boolean attemptCapture(Player catcher, LivingEntity target) {
         if (!Main.permissionManager.hasPermissionToCapture(catcher, target)) {
-            catcher.sendMessage(Language.PREFIX + "You do not have permission to capture this creature.");
+            catcher.sendMessage(Language.getKey("errorCapturePermissions"));
             return false;
         }
 
         if (Settings.griefPreventionHook &&
                 Main.griefPrevention.claimsEnabledForWorld(target.getWorld()) &&
                 Main.griefPrevention.allowBuild(catcher, target.getLocation()) != null) {
-            catcher.sendMessage(Language.PREFIX + "You do not have permission to capture creatures here.");
+            catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
             return false;
+        }
+
+        if (Settings.residenceHook && !Main.residence.isResAdminOn(catcher) &&
+                Main.residence.getResidenceManager().getByLoc(target.getLocation()) != null) {
+
+            for (String s : Settings.residenceFlags) {
+                // checks the target is an AnimalType and catcher has allowed in res
+                // TODO Better
+                if (target instanceof Animals && s.contains("animal") && !Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
+                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
+                    return false;
+                } else if (target instanceof Monster && (s.contains("mob") || s.contains("monster")) && !Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
+                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
+                    return false;
+                } else if (!Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
+                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
+                    return false;
+                }
+            }
         }
 
         //4) Check if this is a disabled world.
         if (Settings.isDisabledWorld(catcher.getWorld().getName())) {
-            catcher.sendMessage(Language.PREFIX + "You cannot capture a creature in this world!");
+            catcher.sendMessage(Language.getKey("errorCaptureWorldPermissions"));
             return false;
         }
 
         //5) Check if they have enough money/items.
         if (!catcher.hasPermission(Main.permissionManager.NoCost) && Settings.costMode != Settings.CostMode.NONE) {
             if (!EconomyManager.chargePlayer(catcher)) {
-                catcher.sendMessage(Language.PREFIX + "You do not have enough " +
-                        (Settings.costMode == Settings.CostMode.ITEM ?
-                                Settings.costMaterial.name() :
-                                "money (" + Settings.costVault + " required)."));
+                switch (Settings.costMode) {
+                    case ITEM:
+                        catcher.sendMessage(Language.getKey("notEnoughItem").replaceAll("%item%", Settings.costMaterial.name()).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
+                    case VAULT:
+                        catcher.sendMessage(Language.getKey("notEnoughMoney").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
+                    case ALL:
+                        catcher.sendMessage(Language.getKey("notEnoughItem").replaceAll("%item%", Settings.costMaterial.name()).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
+                        catcher.sendMessage(Language.getKey("notEnoughMoney").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
+                }
                 return false;
             }
         }
@@ -196,7 +220,7 @@ public class EventManager implements Listener {
 
             if (NBTManager.isSpawnEgg(event.getPlayer().getInventory().getItemInMainHand())) {
                 if (Settings.isDisabledWorld(event.getPlayer().getWorld().getName())) {
-                    event.getPlayer().sendMessage(Language.PREFIX + "You cannot release a creature in this world!");
+                    event.getPlayer().sendMessage(Language.getKey("errorUseWorldPermissions"));
                     return;
                 }
 

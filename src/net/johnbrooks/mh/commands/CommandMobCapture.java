@@ -20,15 +20,15 @@ public class CommandMobCapture implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
         if (!sender.hasPermission("MobCapture.Admin")) {
-            sender.sendMessage(Language.PREFIX + "You do not have permission to run this command.");
+            sender.sendMessage(Language.getKey("errorCommandPermissions"));
             return true;
         }
 
         if (args.length == 0) {
             if (sender instanceof Player) {
-                sender.sendMessage(Language.PREFIX + "This plugin was created by WiseHollow!");
+                sender.sendMessage(Language.getKeyWithoutPrefix("prefix") + "This plugin was created by WiseHollow! (and modified by mjl1010)");
                 Player player = (Player) sender;
-                TextComponent message = new TextComponent(Language.PREFIX + ChatColor.UNDERLINE + "Click here " +
+                TextComponent message = new TextComponent(Language.getKeyWithoutPrefix("prefix") + ChatColor.UNDERLINE + "Click here " +
                         ChatColor.RESET + "" + ChatColor.BLUE + "to see my profile and my other plugins! " + Main.plugin.getName() + "!");
                 message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.spigotmc.org/members/wisehollow.14804/"));
                 player.spigot().sendMessage(message);
@@ -39,15 +39,15 @@ public class CommandMobCapture implements CommandExecutor {
             if (args[0].equalsIgnoreCase("version")) {
                 sender.sendMessage(ChatColor.BLUE + Main.plugin.getName() + "'s current version: " + Main.plugin.getDescription().getVersion());
                 if (UpdateManager.isUpdateAvailable())
-                    sender.sendMessage(Language.PREFIX + "Update is available.");
+                    sender.sendMessage(Language.getKeyWithoutPrefix("prefix") + "Update is available.");
                 else
-                    sender.sendMessage(Language.PREFIX + "Everything is up-to-date.");
+                    sender.sendMessage(Language.getKeyWithoutPrefix("prefix") + "Everything is up-to-date.");
                 return true;
             } else if (args[0].equalsIgnoreCase("update")) {
                 if (UpdateManager.isUpdateAvailable()) {
                     if (sender instanceof Player) {
                         Player player = (Player) sender;
-                        TextComponent message = new TextComponent(Language.PREFIX + ChatColor.UNDERLINE + "Click here " +
+                        TextComponent message = new TextComponent(Language.getKeyWithoutPrefix("prefix") + ChatColor.UNDERLINE + "Click here " +
                                 ChatColor.RESET + "" + ChatColor.BLUE + "to get the latest version of " + Main.plugin.getName() + "!");
                         message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://goo.gl/yiWQnT"));
                         player.spigot().sendMessage(message);
@@ -56,12 +56,12 @@ public class CommandMobCapture implements CommandExecutor {
                         sender.sendMessage("Go to https://goo.gl/yiWQnT to get the latest version of " + Main.plugin.getName() + "!");
                 }
                 else
-                    sender.sendMessage(Language.PREFIX + "Everything is up-to-date.");
+                    sender.sendMessage(Language.getKeyWithoutPrefix("prefix") + "Everything is up-to-date.");
                 return true;
             } else if (args[0].equalsIgnoreCase("reload")) {
                 Main.plugin.reloadConfig();
                 Settings.load();
-                sender.sendMessage(Language.PREFIX + "Configuration has been reloaded!");
+                sender.sendMessage(Language.getKeyWithoutPrefix("prefix") + "Configuration has been reloaded!");
                 return true;
             } else if (args[0].equalsIgnoreCase("regenConfig")) {
                 File file = new File("plugins" + File.separator + Main.plugin.getName() + File.separator + "config.yml");
@@ -69,7 +69,7 @@ public class CommandMobCapture implements CommandExecutor {
                 Main.plugin.saveDefaultConfig();
                 Main.plugin.reloadConfig();
                 Settings.load();
-                sender.sendMessage(Language.PREFIX + "Configuration has been regenerated and reloaded!");
+                sender.sendMessage(Language.getKeyWithoutPrefix("prefix") + "Configuration has been regenerated and reloaded!");
                 return true;
             } else if (args[0].equalsIgnoreCase("spawn")) {
                 if (!UniqueProjectileData.isEnabled()) {
