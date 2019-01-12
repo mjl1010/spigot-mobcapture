@@ -13,9 +13,6 @@ mobHealth: '&3Health: &e'
 mobAge: '&3Age: &e'
 mobTamed: '&3Tamed: &e'
 mobColor: '&3Color: &e'
-mobAge: '&3Age: &e'
-mobAge: '&3Age: &e'
-mobAge: '&3Age: &e'
-mobAge: '&3Age: &e'
-mobAge: '&3Age: &e'
-mobAge: '&3Age: &e'
+ageBaby: Baby
+affirmative: Yes
+negative: No

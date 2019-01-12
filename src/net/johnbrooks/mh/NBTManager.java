@@ -47,10 +47,14 @@ public class NBTManager {
 
                 String entityType = entityDetails.getString("entity type");
 
-                LivingEntity livingEntity = (LivingEntity) target.getWorld().spawnEntity(target.clone().add(0, 1f, 0), EntityType.valueOf(entityType));
-                applyNBTDataToEntity(livingEntity, entityDetails);
+                try {
+                    LivingEntity livingEntity = (LivingEntity) target.getWorld().spawnEntity(target.clone().add(0, 1f, 0), EntityType.valueOf(entityType));
+                    applyNBTDataToEntity(livingEntity, entityDetails);
 
-                return livingEntity;
+                    return livingEntity;
+                } catch (Exception ex) {
+                    Main.logger.warning("Spawn entity type not found.");
+                }
             }
             else
                 Main.logger.warning("Spawn Item does not have any NBT Tags.");
@@ -322,24 +326,24 @@ public class NBTManager {
         else
             maxHealthData = String.valueOf(livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
 
-        list.add(new NBTTagString(ChatColor.AQUA + "Health: " + ChatColor.YELLOW + healthData + "/" + maxHealthData));
+        list.add(new NBTTagString(Language.getKeyWithoutPrefix("mobHealth") + healthData + "/" + maxHealthData));
 
         // if baby, add to lore
         if (livingEntity instanceof Ageable) {
             Ageable ageable = (Ageable) livingEntity;
             if (!ageable.isAdult())
-                list.add(new NBTTagString(ChatColor.AQUA + "Age: " + ChatColor.YELLOW + "Baby"));
+                list.add(new NBTTagString(Language.getKeyWithoutPrefix("mobAge") + Language.getKeyWithoutPrefix("ageBaby")));
         }
 
         // if tamed
         if (livingEntity instanceof Tameable) {
             Tameable tameable = (Tameable) livingEntity;
-            list.add(new NBTTagString(ChatColor.AQUA + "Tamed: " + ChatColor.YELLOW + (tameable.isTamed() ? "Yes" : "No")));
+            list.add(new NBTTagString(Language.getKeyWithoutPrefix("mobTamed") + (tameable.isTamed() ? Language.getKeyWithoutPrefix("affirmative") : Language.getKeyWithoutPrefix("negative"))));
         }
 
         if (livingEntity instanceof Parrot) {
             Parrot parrot = (Parrot) livingEntity;
-            list.add(new NBTTagString(ChatColor.AQUA + "Color: " + ChatColor.YELLOW + parrot.getVariant().name()));
+            list.add(new NBTTagString(Language.getKeyWithoutPrefix("mobColor") + parrot.getVariant().name()));
         }
 
         //6) If potion effects active, display them
