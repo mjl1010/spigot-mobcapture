@@ -4,6 +4,7 @@ import net.johnbrooks.mh.items.CaptureEgg;
 import net.minecraft.server.v1_13_R2.*;
 import org.bukkit.*;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
 import org.bukkit.entity.*;
@@ -48,12 +49,21 @@ public class NBTManager {
                 String entityType = entityDetails.getString("entity type");
 
                 try {
-                    LivingEntity livingEntity = (LivingEntity) target.getWorld().spawnEntity(target.clone().add(0, 1f, 0), EntityType.valueOf(entityType));
+                    LivingEntity livingEntity = (LivingEntity) target.getWorld().spawnEntity(target.clone().add(0, 0.5, 0), EntityType.valueOf(entityType));
                     applyNBTDataToEntity(livingEntity, entityDetails);
 
                     return livingEntity;
                 } catch (Exception ex) {
                     Main.logger.warning("Spawn entity type not found.");
+                    String nombre=null;
+                    if (spawnItem.getType() == Material.MOOSHROOM_SPAWN_EGG) {
+                        nombre = "MUSHROOM_COW";
+                    } else {
+                        String[] S = spawnItem.getType().name().split("_");
+                        nombre = S[0];
+                        for (int x = 1; x < S.length - 2; x++) nombre += "_" + S[x];
+                    }
+                    return (LivingEntity) target.getWorld().spawnEntity(target.clone().add(0, 0.5, 0), EntityType.valueOf(nombre));
                 }
             }
             else
@@ -295,7 +305,7 @@ public class NBTManager {
             entityName = livingEntity.getCustomName();
 
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.setDisplayName(CaptureEgg.TITLE_PREFIX + entityName);
+        itemMeta.setDisplayName(Language.getKeyWithoutPrefix("capturedMob").replaceAll("%entity%", entityName));
         itemStack.setItemMeta(itemMeta);
 
         net.minecraft.server.v1_13_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
@@ -313,7 +323,7 @@ public class NBTManager {
         //display.set("Name", new NBTTagString(CaptureEgg.TITLE_PREFIX + entityName));
         //4) Setup lore
         NBTTagList list = new NBTTagList();
-        list.add(new NBTTagString(ChatColor.AQUA + "Creature Type: " + ChatColor.YELLOW + livingEntity.getType().name()));
+        list.add(new NBTTagString(Language.getKeyWithoutPrefix("mobType") + livingEntity.getType().name()));
         //5) If the health/max-health is an integer, don't write it out to be a double.
         String healthData;
         if (round(livingEntity.getHealth(), 1) == (int) livingEntity.getHealth())

@@ -10,8 +10,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 public class CaptureEgg {
-    public static final String TITLE_PREFIX = ChatColor.GOLD + "Captured ";
-
     public static void captureLivingEntity(LivingEntity livingEntity) {
         ItemStack eggItemStack = CaptureEgg.get(livingEntity);
         Item drop = livingEntity.getLocation().getWorld().dropItem(livingEntity.getLocation(), eggItemStack);

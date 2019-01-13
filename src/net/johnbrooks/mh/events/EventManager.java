@@ -242,7 +242,7 @@ public class EventManager implements Listener {
                         // 1) Spawn creature at target location and cancel event.
                         LivingEntity spawnedEntity = CaptureEgg.useSpawnItem(event.getPlayer().getInventory().getItemInMainHand(), target);
                         event.setCancelled(true);
-                        event.getPlayer().sendMessage(ChatColor.YELLOW + Main.plugin.getName() + ": " + ChatColor.BLUE + spawnedEntity.getType().name() + " successfully spawned!");
+                        //event.getPlayer().sendMessage(ChatColor.YELLOW + Main.plugin.getName() + ": " + ChatColor.BLUE + spawnedEntity.getType().name() + " successfully spawned!");
 
                         // 2) Remove itemstack from user, or reduce amount by 1.
                         if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {

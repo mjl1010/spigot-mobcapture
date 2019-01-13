@@ -1,11 +1,9 @@
 name: MobCapture
 version: 1.2.6.1
-authors: [WiseHollow,mjl1010]
+authors: [WiseHollow, mjl1010]
 main: net.johnbrooks.mh.Main
 api-version: 1.13
-
-softdepend: [ Vault, GriefPrevention, Residence ]
-
+softdepend: [Vault, GriefPrevention, Residence]
 permissions:
   MobCapture.Admin:
     description: Performs administrative tasks regarding MobCapture.
@@ -22,7 +20,6 @@ permissions:
   MobCapture.NoCost:
     description: Capture creatures without a cost.
     default: op
-
 commands:
   MobCapture:
     description: Performs administrative tasks regarding MobCapture.

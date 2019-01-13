@@ -1,5 +1,6 @@
 package net.johnbrooks.mh;
 
+import com.bekvon.bukkit.residence.Residence;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.johnbrooks.mh.items.UniqueProjectileData;
 import net.milkbowl.vault.economy.Economy;
@@ -77,6 +78,12 @@ public class Settings {
         if (griefPreventionHook) {
             Main.griefPrevention = GriefPrevention.instance;
             Main.logger.info("GriefPrevention hook " + (Main.griefPrevention != null
+                    ? "was successful!" : "has failed!"));
+        }
+
+        if (residenceHook) {
+            Main.residence = Residence.getInstance();
+            Main.logger.info("Residence hook " + (Main.residence != null
                     ? "was successful!" : "has failed!"));
         }
 
