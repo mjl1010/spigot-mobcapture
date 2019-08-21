@@ -1,24 +1,20 @@
 # What projectile catches the creature.
 Projectile Catcher: EGG
-# Cost Mode: [ NONE, ITEM, VAULT, ALL ]
+# Cost Mode: [ NONE, ITEM, VAULT ]
 Cost Mode: ITEM
-# When in ITEM or ALL mode, a player must have this item to catch a creature.
+# When in ITEM mode, a player must have this item to catch a creature.
 Cost Item: REDSTONE
 Cost Amount: 1
-# When in VAULT or ALL mode, a player must have at least this amount of money.
+# When in VAULT mode, a player must have at least this amount of money.
 Cost Vault: 100
 # In these worlds, you cannot capture or release creatures.
 Disabled Worlds: []
 # Should eggs take the color of the creature they belong to?
 Colored Eggs: true
+# Should we hook into Towny
+Towny Hook: false
 # Are you using GriefPrevention?
 GriefPrevention Hook: false
-# Are you using Residence (https://www.spigotmc.org/resources/residence-1-7-10-up-to-1-13-1.11480/)?
-Residence Hook: false
-# If true, you can use custom flags to allow capture, if flag contains 'animal' has refereces a AnimalType and 'mob' or 'monster' is MonsterType
-Residence Allow Flags: ["animalcapture","mobcapture","capture"]
-# Allow capturing in Residences without allowed flags
-Residence Allow Default: false
 # Allow capturing creatures with melee
 MeleeCapture: true
 # Require projectile to contain key metadata.

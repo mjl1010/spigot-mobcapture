@@ -30,6 +30,9 @@ import org.bukkit.util.Vector;
 public class EventManager implements Listener {
     public void initialize() {
         register(this);
+        if (Settings.townyHook) {
+            register(new TownyCaptureEvents());
+        }
     }
 
     private void register(Listener listener) {
@@ -111,7 +114,6 @@ public class EventManager implements Listener {
 
     @EventHandler
     public void captureEvent(EntityDamageByEntityEvent event) {
-
         Player player = null;
         LivingEntity livingEntity = null;
 
@@ -124,7 +126,8 @@ public class EventManager implements Listener {
                     ((Projectile) event.getDamager()).getShooter() instanceof Player) {
                 player = (Player) ((Projectile) event.getDamager()).getShooter();
             } else if (Settings.meleeCapture && event.getDamager() instanceof Player
-                    && ((Player) event.getDamager()).getInventory().getItemInMainHand() != null
+                    && ((Player) event.getDamager()).getInventory().getItemInMainHand().getType() != null
+                    && ((Player) event.getDamager()).getInventory().getItemInMainHand().getType() != Material.AIR
                     && ((Player) event.getDamager()).getInventory().getItemInMainHand().getType() == Settings.projectileCatcherMaterial) {
                 player = ((Player) event.getDamager());
             }
@@ -207,7 +210,7 @@ public class EventManager implements Listener {
 
     @EventHandler
     public void preventUseEggOnOtherEntity(PlayerInteractEntityEvent event) {
-        if (event.getPlayer().getInventory().getItemInMainHand() != null && event.getHand() == EquipmentSlot.HAND
+        if (event.getPlayer().getInventory().getItemInMainHand() != null && event.getPlayer().getInventory().getItemInMainHand().getType() != Material.AIR && event.getHand() == EquipmentSlot.HAND
                 && NBTManager.isSpawnEgg(event.getPlayer().getInventory().getItemInMainHand())) {
             event.setCancelled(true);
         }
@@ -215,22 +218,24 @@ public class EventManager implements Listener {
 
     @EventHandler
     public void useSpawnEgg(PlayerInteractEvent event) {
-        if (event.getPlayer().getInventory().getItemInMainHand() != null &&
+        if (event.getPlayer().getInventory().getItemInMainHand() != null && event.getPlayer().getInventory().getItemInMainHand().getType() != Material.AIR &&
                 event.getHand() == EquipmentSlot.HAND) {
 
             if (NBTManager.isSpawnEgg(event.getPlayer().getInventory().getItemInMainHand())) {
-                if (Settings.isDisabledWorld(event.getPlayer().getWorld().getName())) {
+                if (Settings.isDisabledWorld(event.getPlayer().getWorld().getName()) || event.useItemInHand() == Event.Result.DENY) {
                     event.getPlayer().sendMessage(Language.getKey("errorUseWorldPermissions"));
                     return;
                 }
 
-                if (!event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                // && !event.isCancelled()
+                if (event.getClickedBlock() != null && (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getClickedBlock().getType() == Material.WATER)) {
                     Location target = event.getClickedBlock().getLocation().clone().add(0.5, 0, 0.5);
 
                     if (event.getBlockFace() != BlockFace.UP) {
                         // Make a friendly location to spawn the entity.
-                        Vector direction = event.getPlayer().getLocation().toVector().subtract(target.toVector());
-                        direction = direction.normalize();
+                        // Vector direction = event.getPlayer().getLocation().toVector().subtract(target.toVector());
+                        // direction = direction.normalize();
+                        final Vector direction = event.getPlayer().getLocation().toVector().subtract(target.toVector()).normalize();
                         target = target.add(direction.multiply(2));
                     }
 
