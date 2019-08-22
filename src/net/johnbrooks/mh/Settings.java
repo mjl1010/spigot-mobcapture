@@ -15,7 +15,8 @@ public class Settings {
     public enum CostMode { NONE, VAULT, ITEM, ALL }
 
     public static CostMode costMode = CostMode.ITEM;
-
+    public static boolean catchEffect = true;
+    public static int timeRelease = 60;
     public static Material projectileCatcherMaterial = Material.SNOWBALL;
 
     public static Material costMaterial = Material.REDSTONE;
@@ -45,6 +46,9 @@ public class Settings {
             Main.logger.severe("Invalid material name! Check " + Main.plugin.getDescription().getName() + "'s " +
                     "SpigotMC page to get Material names.");
         }
+
+        catchEffect = config.getBoolean("Catch Effect");
+        timeRelease = config.getInt("Release Time");
 
         try
         {

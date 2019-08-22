@@ -229,7 +229,7 @@ public class EventManager implements Listener {
 
                 // && !event.isCancelled()
                 if (event.getClickedBlock() != null && (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getClickedBlock().getType() == Material.WATER)) {
-                    Location target = event.getClickedBlock().getLocation().clone().add(0.5, 0, 0.5);
+                    Location target = event.getClickedBlock().getLocation().clone().add(0.5, 0.5, 0.5);
 
                     if (event.getBlockFace() != BlockFace.UP) {
                         // Make a friendly location to spawn the entity.
@@ -284,7 +284,7 @@ public class EventManager implements Listener {
                             CaptureEgg.useSpawnItem(item.getItemStack(), fixedLocation);
                             item.remove();
                         }
-                    }, 60);
+                    }, Settings.timeRelease * 20L);
 
                     // 4) Remove itemstack from user, or reduce amount by 1.
                     if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
