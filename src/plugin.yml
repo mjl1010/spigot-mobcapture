@@ -1,8 +1,8 @@
 name: AnbuCapture
-version: 1.3.2.1
+version: 1.3.4-beta
 authors: [WiseHollow, mjl1010]
 main: net.johnbrooks.mh.Main
-api-version: '1.14'
+api-version: '1.16'
 softdepend: [Vault, GriefPrevention, Towny, Residence]
 permissions:
   MobCapture.Admin:

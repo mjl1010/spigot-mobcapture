@@ -1,11 +1,10 @@
 package net.johnbrooks.mh.managers;
 
-import net.johnbrooks.mh.Main;
 import org.bukkit.entity.*;
 
 public class PermissionManager {
-    public final String NoCost = Main.plugin.getName() + ".NoCost";
-    public final String CatchPrefix = Main.plugin.getName() + ".Catch.";
+    public final String NoCost = "MobCapture.NoCost";
+    public final String CatchPrefix = "MobCapture.Catch.";
     public final String CatchPeaceful = "MobCapture.Catch.Peaceful";
     public final String CatchHostile = "MobCapture.Catch.Hostile";
 

@@ -13,7 +13,7 @@ import org.bukkit.util.Vector;
 public class CaptureEgg {
     public static void captureLivingEntity(LivingEntity livingEntity) {
         if (Settings.catchEffect) {
-            livingEntity.getLocation().getWorld().playSound(livingEntity.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1f, 1f);
+            livingEntity.getLocation().getWorld().playSound(livingEntity.getLocation(), Sound.ENTITY_GHAST_SHOOT, SoundCategory.MASTER, 1f, 1f);
             livingEntity.getLocation().getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, livingEntity.getLocation(), 4);
         }
         ItemStack eggItemStack = CaptureEgg.get(livingEntity);
@@ -23,8 +23,9 @@ public class CaptureEgg {
     }
 
     public static LivingEntity useSpawnItem(ItemStack spawnItem, Location target) {
+        if (target == null) return null;
         if (Settings.catchEffect) {
-            target.getWorld().playSound(target, Sound.ENTITY_GHAST_SHOOT, 1f, 1f);
+            target.getWorld().playSound(target, Sound.ENTITY_GHAST_SHOOT, SoundCategory.MASTER, 1f, 1f);
             target.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, target, 4);
         }
         return NBTManager.spawnEntityFromNBTData(spawnItem, target);
@@ -38,9 +39,6 @@ public class CaptureEgg {
         Material material = Material.getMaterial(livingEntity.getType().name().toUpperCase() + "_SPAWN_EGG");
         if (material == null) {
             switch (livingEntity.getType()) {
-                case PIG_ZOMBIE:
-                    material = Material.ZOMBIE_PIGMAN_SPAWN_EGG;
-                    break;
                 case MUSHROOM_COW:
                     material = Material.MOOSHROOM_SPAWN_EGG;
                     break;

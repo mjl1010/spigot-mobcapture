@@ -1,7 +1,7 @@
 # What projectile catches the creature.
 Projectile Catcher: EGG
 # When throw or catch the creature, this shows an effect (like old MobCatcher)
-Catcher Effect: true
+Catch Effect: true
 # The time to release (spawn) the creature in seconds.
 Release Time: 3
 # Cost Mode: [ NONE, ITEM, VAULT, ALL ]

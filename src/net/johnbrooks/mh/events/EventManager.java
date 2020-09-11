@@ -30,9 +30,11 @@ import org.bukkit.util.Vector;
 public class EventManager implements Listener {
     public void initialize() {
         register(this);
-        if (Settings.townyHook) {
+        if (Settings.townyHook)
             register(new TownyCaptureEvents());
-        }
+
+        if (Settings.residenceHook)
+            register(new ResidenceCaptureEvents());
     }
 
     private void register(Listener listener) {
@@ -126,7 +128,6 @@ public class EventManager implements Listener {
                     ((Projectile) event.getDamager()).getShooter() instanceof Player) {
                 player = (Player) ((Projectile) event.getDamager()).getShooter();
             } else if (Settings.meleeCapture && event.getDamager() instanceof Player
-                    && ((Player) event.getDamager()).getInventory().getItemInMainHand().getType() != null
                     && ((Player) event.getDamager()).getInventory().getItemInMainHand().getType() != Material.AIR
                     && ((Player) event.getDamager()).getInventory().getItemInMainHand().getType() == Settings.projectileCatcherMaterial) {
                 player = ((Player) event.getDamager());
@@ -154,24 +155,22 @@ public class EventManager implements Listener {
             return false;
         }
 
-        if (Settings.residenceHook && !Main.residence.isResAdminOn(catcher) &&
-                Main.residence.getResidenceManager().getByLoc(target.getLocation()) != null) {
-
-            for (String s : Settings.residenceFlags) {
-                // checks the target is an AnimalType and catcher has allowed in res
-                // TODO Better
-                if (target instanceof Animals && s.contains("animal") && !Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
-                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
-                    return false;
-                } else if (target instanceof Monster && (s.contains("mob") || s.contains("monster")) && !Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
-                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
-                    return false;
-                } else if (!Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
-                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
-                    return false;
-                }
-            }
-        }
+//        if (Settings.residenceHook && !Main.residence.isResAdminOn(catcher) && Main.residence.getResidenceManager().getByLoc(target.getLocation()) != null) {
+//            for (String s : Settings.residenceFlags) {
+//                // checks the target is an AnimalType and catcher has allowed in res
+//                // TODO Better
+//                if (target instanceof Animals && s.contains("animal") && !Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
+//                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
+//                    return false;
+//                } else if (target instanceof Monster && (s.contains("mob") || s.contains("monster")) && !Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
+//                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
+//                    return false;
+//                } else if (!Main.residence.getResidenceManager().getByLoc(target.getLocation()).getPermissions().playerHas(catcher.getName(), s, Settings.residenceAllowed)) {
+//                    catcher.sendMessage(Language.getKey("errorCaptureAllowPermissions"));
+//                    return false;
+//                }
+//            }
+//        }
 
         //4) Check if this is a disabled world.
         if (Settings.isDisabledWorld(catcher.getWorld().getName())) {
@@ -180,19 +179,17 @@ public class EventManager implements Listener {
         }
 
         //5) Check if they have enough money/items.
-        if (!catcher.hasPermission(Main.permissionManager.NoCost) && Settings.costMode != Settings.CostMode.NONE) {
-            if (!EconomyManager.chargePlayer(catcher)) {
-                switch (Settings.costMode) {
-                    case ITEM:
-                        catcher.sendMessage(Language.getKey("notEnoughItem").replaceAll("%item%", Settings.costMaterial.name()).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
-                    case VAULT:
-                        catcher.sendMessage(Language.getKey("notEnoughMoney").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
-                    case ALL:
-                        catcher.sendMessage(Language.getKey("notEnoughItem").replaceAll("%item%", Settings.costMaterial.name()).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
-                        catcher.sendMessage(Language.getKey("notEnoughMoney").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
-                }
-                return false;
+        if (!catcher.hasPermission(Main.permissionManager.NoCost) && Settings.costMode != Settings.CostMode.NONE && !EconomyManager.chargePlayer(catcher)) {
+            switch (Settings.costMode) {
+                case ITEM:
+                    catcher.sendMessage(Language.getKey("notEnoughItem").replaceAll("%item%", Settings.costMaterial.name()).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
+                case VAULT:
+                    catcher.sendMessage(Language.getKey("notEnoughMoney").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
+                case ALL:
+                    catcher.sendMessage(Language.getKey("notEnoughItem").replaceAll("%item%", Settings.costMaterial.name()).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
+                    catcher.sendMessage(Language.getKey("notEnoughMoney").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
             }
+            return false;
         }
 
         //6) Setup capture event and run it.
@@ -210,7 +207,7 @@ public class EventManager implements Listener {
 
     @EventHandler
     public void preventUseEggOnOtherEntity(PlayerInteractEntityEvent event) {
-        if (event.getPlayer().getInventory().getItemInMainHand() != null && event.getPlayer().getInventory().getItemInMainHand().getType() != Material.AIR && event.getHand() == EquipmentSlot.HAND
+        if (event.getPlayer().getInventory().getItemInMainHand().getType() != Material.AIR && event.getHand() == EquipmentSlot.HAND
                 && NBTManager.isSpawnEgg(event.getPlayer().getInventory().getItemInMainHand())) {
             event.setCancelled(true);
         }
@@ -218,8 +215,7 @@ public class EventManager implements Listener {
 
     @EventHandler
     public void useSpawnEgg(PlayerInteractEvent event) {
-        if (event.getPlayer().getInventory().getItemInMainHand() != null && event.getPlayer().getInventory().getItemInMainHand().getType() != Material.AIR &&
-                event.getHand() == EquipmentSlot.HAND) {
+        if (event.getItem() != null && event.getItem().getType() != Material.AIR && event.getPlayer().getInventory().getItemInMainHand().getType() != Material.AIR && event.getHand() == EquipmentSlot.HAND) {
 
             if (NBTManager.isSpawnEgg(event.getPlayer().getInventory().getItemInMainHand())) {
                 if (Settings.isDisabledWorld(event.getPlayer().getWorld().getName()) || event.useItemInHand() == Event.Result.DENY) {
@@ -260,17 +256,20 @@ public class EventManager implements Listener {
                         }
                     }
                 } else if (event.getAction() == Action.RIGHT_CLICK_AIR) {
-                    //1) Let's prepare to throw the egg. Here we have the unit vector.
+                    // Prevents java.util.concurrent.ExecutionException: java.lang.AssertionError: TRAP
+                    event.setCancelled(true);
+
+                    // 1) Let's prepare to throw the egg. Here we have the unit vector.
                     Vector direction = event.getPlayer().getLocation().getDirection().clone().normalize();
 
-                    //2) Spawn item-drop.
+                    // 2) Spawn item-drop.
                     ItemStack toThrow = event.getPlayer().getInventory().getItemInMainHand().clone();
                     toThrow.setAmount(1);
                     final Item item = event.getPlayer().getWorld().dropItem(
                             event.getPlayer().getLocation().clone().add(0, 1, 0),
                             toThrow);
 
-                    //3) Prevent pickup, set direction, set velocity
+                    // 3) Prevent pickup, set direction, set velocity
                     item.setPickupDelay(Integer.MAX_VALUE);
                     item.getLocation().setDirection(direction);
                     item.setVelocity(direction.clone().multiply(1.5f));

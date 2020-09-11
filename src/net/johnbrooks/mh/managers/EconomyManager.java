@@ -14,9 +14,9 @@ public class EconomyManager {
     public static boolean chargePlayer(Player player) {
         switch (Settings.costMode) {
             case ITEM:
-                return chargeItem(player);
+                return canChargeItem(player) && chargeItem(player);
             case VAULT:
-                return chargeVault(player);
+                return canChargeVault(player) && chargeVault(player);
             case ALL:
                 return (canChargeVault(player) && canChargeItem(player)) && (chargeVault(player) && chargeItem(player));
             default:
@@ -29,20 +29,19 @@ public class EconomyManager {
     }
 
     private static boolean chargeVault(Player player) {
-        if (canChargeVault(player)) {
-            if (Settings.costVault > 0) {
-                player.sendMessage(Language.getKey("chargeVault").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
-                Main.economy.withdrawPlayer(player, Settings.costVault);
-            }
-            return true;
+        if (!canChargeVault(player)) return false;
+        if (Settings.costVault > 0) {
+            player.sendMessage(Language.getKey("chargeVault").replaceAll("%costVault%", String.valueOf(Settings.costVault)));
+            Main.economy.withdrawPlayer(player, Settings.costVault);
         }
-        return false;
+        return true;
     }
 
     private static boolean canChargeItem(Player player) {
         Optional<ItemStack> itemStackOptional = Arrays.stream(player.getInventory().getContents())
                 .filter(itemStack -> itemStack != null && itemStack.getType().equals(Settings.costMaterial) && itemStack.getAmount() >= Settings.costAmount)
                 .findAny();
+
         return itemStackOptional.isPresent();
     }
 
@@ -51,16 +50,15 @@ public class EconomyManager {
                 .filter(itemStack -> itemStack != null && itemStack.getType().equals(Settings.costMaterial) && itemStack.getAmount() >= Settings.costAmount)
                 .findAny();
 
-        if (itemStackOptional.isPresent()) {
-            ItemStack itemStack = itemStackOptional.get();
-            itemStack.setAmount(itemStack.getAmount() - Settings.costAmount);
+        if (!itemStackOptional.isPresent()) return false;
 
-            String capitalizedMaterial = Settings.costMaterial.name().substring(0, 1) + Settings.costMaterial.name().substring(1).toLowerCase().replace("_", " ");
-            if (Settings.costAmount > 0) {
-                player.sendMessage(Language.getKey("chargeItem").replaceAll("%item%", capitalizedMaterial).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
-            }
-            return true;
-        }
-        return false;
+        ItemStack itemStack = itemStackOptional.get();
+        itemStack.setAmount(itemStack.getAmount() - Settings.costAmount);
+        String capitalizedMaterial = Settings.costMaterial.name().substring(0, 1) + Settings.costMaterial.name().substring(1).toLowerCase().replace("_", " ");
+
+        if (Settings.costAmount > 0)
+            player.sendMessage(Language.getKey("chargeItem").replaceAll("%item%", capitalizedMaterial).replaceAll("%costItem%", String.valueOf(Settings.costAmount)));
+
+        return true;
     }
 }
