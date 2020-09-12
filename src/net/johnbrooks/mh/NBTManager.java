@@ -5,6 +5,8 @@ import org.bukkit.*;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.enchantments.EnchantmentWrapper;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.ItemStack;
@@ -15,6 +17,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class NBTManager {
@@ -252,21 +255,33 @@ public class NBTManager {
             //1) Declare storage for item stack material, slot, and NBT tags
             NBTTagList tagList = entityDetails.getList("inventory nbt tags", ListType.COMPOUND.ordinal());
             NBTTagList materialList = entityDetails.getList("inventory materials", ListType.STRING.ordinal());
+            NBTTagList enchList = entityDetails.getList("inventory ench", ListType.STRING.ordinal());
 
             for (int i = 0; i < materialList.size(); i++) {
                 //2) Load NBT tag data and material type
                 String[] materialElements = materialList.getString(i).split("\\.");
                 String materialName = materialElements[0];
                 int slot = Integer.parseInt(materialElements[1]);
+                int ammount = materialElements.length >= 3 ? Integer.parseInt(materialElements[2]) : 1;
                 NBTTagCompound tag = tagList.getCompound(i);
 
                 //3) Create item stack and attach NBT tag to it.
-                ItemStack itemStack = new ItemStack(Material.valueOf(materialName));
+                ItemStack itemStack = new ItemStack(Material.valueOf(materialName), ammount);
                 if (tag.equals(new NBTTagCompound())) {
                     net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
                     nmsStack.setTag(tag);
                     itemStack = CraftItemStack.asBukkitCopy(nmsStack);
                 }
+
+                // 3.1) Item enchants
+                for (int e = 0; e < enchList.size(); e++) {
+                    String[] enchant = enchList.getString(e).split("\\.");
+                    if (Integer.parseInt(enchant[0]) == i) {
+                        System.out.println(enchant[2]);
+                        itemStack.addUnsafeEnchantment(new EnchantmentWrapper(enchant[2]), Integer.parseInt(enchant[1]));
+                    }
+                }
+
                 //4) Place in inventory at correct slot number.
                 inventoryHolder.getInventory().setItem(slot, itemStack);
             }
@@ -281,7 +296,7 @@ public class NBTManager {
             abstractHorse.setDomestication(entityDetails.getInt("domestication"));
             abstractHorse.setMaxDomestication(entityDetails.getInt("max domestication"));
 
-            if (livingEntity instanceof ChestedHorse) ((ChestedHorse) abstractHorse).setCarryingChest(entityDetails.getBoolean("chest equipped"));
+            if (livingEntity instanceof ChestedHorse) ((ChestedHorse) livingEntity).setCarryingChest(entityDetails.getBoolean("chest equipped"));
 
             //TODO: INVENTORY CONTENTS
 
@@ -367,7 +382,7 @@ public class NBTManager {
             villager.setRecipes(merchantRecipeList);
         } else if (livingEntity instanceof PiglinAbstract) {
             PiglinAbstract piglin = (PiglinAbstract) livingEntity;
-            piglin.setConversionTime(entityDetails.getInt("converstionTime"));
+            if (entityDetails.getBoolean("convertion")) piglin.setConversionTime(entityDetails.getInt("convertionTime"));
             piglin.setImmuneToZombification(entityDetails.getBoolean("immune"));
         }
 
@@ -644,20 +659,25 @@ public class NBTManager {
 
             NBTTagList tagList = new NBTTagList();
             NBTTagList materialList = new NBTTagList();
+            NBTTagList enchList = new NBTTagList();
+
             for (int i = 0; i < inventoryHolder.getInventory().getContents().length; i++) {
                 ItemStack itemStack = inventoryHolder.getInventory().getContents()[i];
                 if (itemStack != null) {
                     net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
-                    materialList.add(NBTTagString.a(itemStack.getType().name() + "." + i));
-                    if (nmsStack.hasTag())
-                        tagList.add(nmsStack.getTag());
-                    else
-                        tagList.add(new NBTTagCompound());
+                    materialList.add(NBTTagString.a(itemStack.getType().name() + "." + i + itemStack.getAmount()));
+                    NBTTagCompound itemStackCompound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
+                    tagList.add(itemStackCompound);
+
+                    for (Map.Entry<Enchantment, Integer> e : itemStack.getEnchantments().entrySet()) {
+                        enchList.add(NBTTagString.a(i + "." + e.getValue() + "." + e.getKey().getKey().getKey()));
+                    }
                 }
             }
 
             entityDetails.set("inventory materials", materialList);
             entityDetails.set("inventory nbt tags", tagList);
+            entityDetails.set("inventory ench", enchList);
         }
 
         if (livingEntity instanceof Lootable) {
@@ -693,6 +713,8 @@ public class NBTManager {
 
         // Abstract entities
         if (livingEntity instanceof AbstractHorse) {
+            if (livingEntity instanceof ChestedHorse) entityDetails.setBoolean("chest equipped", ((ChestedHorse) livingEntity).isCarryingChest());
+
             AbstractHorse abstractHorse = (AbstractHorse) livingEntity;
             double jumpStrength = abstractHorse.getJumpStrength();
             double speed = livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
@@ -702,11 +724,10 @@ public class NBTManager {
             entityDetails.setInt("domestication", abstractHorse.getDomestication());
             entityDetails.setInt("max domestication", abstractHorse.getMaxDomestication());
 
-            if (livingEntity instanceof ChestedHorse) entityDetails.setBoolean("chest equipped", ((ChestedHorse) abstractHorse).isCarryingChest());
-
 //            NBTTagList recipeList = new NBTTagList();
 //            NBTTagList materialsAndAmount = new NBTTagList(); // Holds materials and amount separated by "."
 //            NBTTagList itemStackTags = new NBTTagList(); // Store the tags
+//            NBTTagList ench = new NBTTagList();
 //
 //            for (ItemStack itemStack : abstractHorse.getInventory()) {
 //                // Store the materials and amounts
@@ -715,33 +736,41 @@ public class NBTManager {
 //                net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
 //                NBTTagCompound itemStackCompound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
 //                itemStackTags.add(itemStackCompound);
+//
+//                for (Map.Entry<Enchantment, Integer> e : itemStack.getEnchantments().entrySet()) {
+//                    NBTTagCompound enchant = new NBTTagCompound();
+//                    enchant.setString("id", e.getKey().getKey().getKey());
+//                    enchant.setInt("lvl", e.getValue());
+//                    ench.add(enchant);
+//                }
 //            }
 //
 //            NBTTagCompound recipeCompound = new NBTTagCompound();
 //            recipeCompound.set("materials", materialsAndAmount);
 //            recipeCompound.set("tags", itemStackTags);
+//            recipeCompound.set("ench", ench);
 //            recipeList.add(recipeCompound);
 //            entityDetails.set("recipes", recipeList);
 
-            NBTTagList itemStackTags2 = new NBTTagList(); // Store the tags
-            net.minecraft.server.v1_16_R2.ItemStack nmsStack2 = CraftItemStack.asNMSCopy(abstractHorse.getInventory().getSaddle());
-            NBTTagCompound itemStackCompound2 = (nmsStack2.hasTag()) ? nmsStack2.getTag() : new NBTTagCompound();
-            itemStackTags2.add(itemStackCompound2);
-            entityDetails.set("saddle", itemStackTags2);
-
-            if (livingEntity instanceof HorseInventory) {
-                NBTTagList itemStackTags3 = new NBTTagList(); // Store the tags
-                net.minecraft.server.v1_16_R2.ItemStack nmsStack3 = CraftItemStack.asNMSCopy(((HorseInventory)livingEntity).getArmor());
-                NBTTagCompound itemStackCompound3 = (nmsStack3.hasTag()) ? nmsStack3.getTag() : new NBTTagCompound();
-                itemStackTags3.add(itemStackCompound3);
-                entityDetails.set("armor", itemStackTags3);
-            } else if (livingEntity instanceof LlamaInventory) {
-                NBTTagList itemStackTags3 = new NBTTagList(); // Store the tags
-                net.minecraft.server.v1_16_R2.ItemStack nmsStack3 = CraftItemStack.asNMSCopy(((LlamaInventory)livingEntity).getDecor());
-                NBTTagCompound itemStackCompound3 = (nmsStack3.hasTag()) ? nmsStack3.getTag() : new NBTTagCompound();
-                itemStackTags3.add(itemStackCompound3);
-                entityDetails.set("decor", itemStackTags3);
-            }
+//            NBTTagList itemStackTags2 = new NBTTagList(); // Store the tags
+//            net.minecraft.server.v1_16_R2.ItemStack nmsStack2 = CraftItemStack.asNMSCopy(abstractHorse.getInventory().getSaddle());
+//            NBTTagCompound itemStackCompound2 = (nmsStack2.hasTag()) ? nmsStack2.getTag() : new NBTTagCompound();
+//            itemStackTags2.add(itemStackCompound2);
+//            entityDetails.set("saddle", itemStackTags2);
+//
+//            if (livingEntity instanceof HorseInventory) {
+//                NBTTagList itemStackTags3 = new NBTTagList(); // Store the tags
+//                net.minecraft.server.v1_16_R2.ItemStack nmsStack3 = CraftItemStack.asNMSCopy(((HorseInventory)livingEntity).getArmor());
+//                NBTTagCompound itemStackCompound3 = (nmsStack3.hasTag()) ? nmsStack3.getTag() : new NBTTagCompound();
+//                itemStackTags3.add(itemStackCompound3);
+//                entityDetails.set("armor", itemStackTags3);
+//            } else if (livingEntity instanceof LlamaInventory) {
+//                NBTTagList itemStackTags3 = new NBTTagList(); // Store the tags
+//                net.minecraft.server.v1_16_R2.ItemStack nmsStack3 = CraftItemStack.asNMSCopy(((LlamaInventory)livingEntity).getDecor());
+//                NBTTagCompound itemStackCompound3 = (nmsStack3.hasTag()) ? nmsStack3.getTag() : new NBTTagCompound();
+//                itemStackTags3.add(itemStackCompound3);
+//                entityDetails.set("decor", itemStackTags3);
+//            }
 
         } else if (livingEntity instanceof AbstractVillager) {
             AbstractVillager villager = (AbstractVillager) livingEntity;
@@ -790,7 +819,8 @@ public class NBTManager {
             entityDetails.set("recipes", recipeList);
         } else if (livingEntity instanceof PiglinAbstract) {
             PiglinAbstract piglin = (PiglinAbstract) livingEntity;
-            entityDetails.setInt("converstionTime", piglin.getConversionTime());
+            entityDetails.setBoolean("convertion", piglin.isConverting());
+            if (piglin.isConverting()) entityDetails.setInt("convertionTime", piglin.getConversionTime());
             entityDetails.setBoolean("immune", piglin.isImmuneToZombification());
         }
 
@@ -868,66 +898,4 @@ public class NBTManager {
         int scale = (int) Math.pow(10, precision);
         return (double) Math.round(value * scale) / scale;
     }
-
-//    private static void saveDataItemStack(ItemStack item, String itemName, NBTTagCompound data) {
-//        if (item != null) {
-//            net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
-//            materialList.add(NBTTagString.a(itemStack.getType().name() + "." + i));
-//            if (nmsStack.hasTag())
-//                tagList.add(nmsStack.getTag());
-//            else
-//                tagList.add(new NBTTagCompound());
-//        }
-//
-//
-//
-//
-//        NBTTagList potionEffectList = new NBTTagList();
-//        for (PotionEffect potionEffect : livingEntity.getActivePotionEffects()) {
-//            NBTTagCompound potionEffectCompound = new NBTTagCompound();
-//            potionEffectCompound.setInt("duration", potionEffect.getDuration());
-//            potionEffectCompound.setInt("amplifier", potionEffect.getAmplifier());
-//            potionEffect.getType().getColor();
-//            potionEffectCompound.setInt("color red", potionEffect.getType().getColor().getRed());
-//            potionEffectCompound.setInt("color green", potionEffect.getType().getColor().getGreen());
-//            potionEffectCompound.setInt("color blue", potionEffect.getType().getColor().getBlue());
-//            potionEffectCompound.setString("type", potionEffect.getType().getName());
-//            potionEffectCompound.setBoolean("ambient", potionEffect.isAmbient());
-//            potionEffectCompound.setBoolean("particles", potionEffect.hasParticles());
-//
-//            potionEffectList.add(potionEffectCompound);
-//        }
-//        entityDetails.set("potion effects", potionEffectList);
-//    }
-//
-//    private static ItemStack getDataItemStack(String itemName, NBTTagCompound entityData) {
-//        ItemStack item = new ItemStack(Material.valueOf(entityData.getString(itemName + " material")));
-//        NBTTagCompound tag = entityData.getCompound(itemName);
-//        if (tag.equals(new NBTTagCompound())) {
-//            net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
-//            nmsStack.setTag(tag);
-//            item = CraftItemStack.asBukkitCopy(nmsStack);
-//        }
-//
-//        if (entityData.hasKey(itemName + " enchant")) {
-//            NBTTagList potionEffectList = new NBTTagList();
-//            for (PotionEffect potionEffect : item.getActivePotionEffects()) {
-//                NBTTagCompound potionEffectCompound = new NBTTagCompound();
-//                potionEffectCompound.setInt("duration", potionEffect.getDuration());
-//                potionEffectCompound.setInt("amplifier", potionEffect.getAmplifier());
-//                potionEffect.getType().getColor();
-//                potionEffectCompound.setInt("color red", potionEffect.getType().getColor().getRed());
-//                potionEffectCompound.setInt("color green", potionEffect.getType().getColor().getGreen());
-//                potionEffectCompound.setInt("color blue", potionEffect.getType().getColor().getBlue());
-//                potionEffectCompound.setString("type", potionEffect.getType().getName());
-//                potionEffectCompound.setBoolean("ambient", potionEffect.isAmbient());
-//                potionEffectCompound.setBoolean("particles", potionEffect.hasParticles());
-//
-//                potionEffectList.add(potionEffectCompound);
-//            }
-//            entityDetails.set("potion effects", potionEffectList);
-//        }
-//
-//        return item;
-//    }
 }
